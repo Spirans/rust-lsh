@@ -54,20 +54,21 @@ impl CosineLSH {
     }
 
     pub fn insert(&mut self, point: Vec<f64>, extra_data: u64) {
-        let hvs = self.to_basic_hash_table_keys(self.param.hash(point.as_slice()));
-        for (a, b) in self.tables.iter_mut().enumerate() {
-            let j = hvs[a];
+        if let Some(hvs) = self.to_basic_hash_table_keys(self.param.hash(point.as_slice())) {
+            for (a, b) in self.tables.iter_mut().enumerate() {
+                let j = hvs[a];
 
-            self.next_id += 1;
-            b.entry(j).
-                or_insert_with(HashTableBucket::new).
-                push(Point{vector: point.clone(), id: self.next_id, extra_data });
-        };
+                self.next_id += 1;
+                b.entry(j).
+                    or_insert_with(HashTableBucket::new).
+                    push(Point { vector: point.clone(), id: self.next_id, extra_data });
+            };
+        }
     }
 
-    pub fn query(&self, q: Vec<f64>, max_result: usize) -> Vec<QueryResult> {
-        let hvs = self.to_basic_hash_table_keys(self.param.hash(&q));
+    pub fn query(&self, q: Vec<f64>, max_result: usize) -> Option<Vec<QueryResult>> {
         let mut seen :HashMap<u64,&Point> = HashMap::new();
+        if let Some(hvs) = self.to_basic_hash_table_keys(self.param.hash(&q)) {
         self.tables.iter().enumerate().for_each(|(i, table)|
             {
                 if let Some(candidates) = table.get(hvs[i].borrow()) {
@@ -75,7 +76,8 @@ impl CosineLSH {
                         for_each(|p| { seen.entry(p.id).or_insert(p); });
                 }
             }
-        );
+        );}
+
 
         let mut distances :Vec<QueryResult> = Vec::with_capacity(seen.len());
         for (_, value) in seen {
@@ -86,15 +88,16 @@ impl CosineLSH {
                 id: value.id,
                 extra_data: value.extra_data});
         }
+        if distances.is_empty() { return None }
         distances.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
         if max_result> 0 && distances.len() > max_result as usize {
-            distances[0..max_result].to_vec()
+            Some(distances[0..max_result].to_vec())
         } else {
-            distances
+            Some(distances)
         }
     }
 
-    fn to_basic_hash_table_keys(&self, keys: Vec<HashTableKey>) -> Vec<u64> {
+    fn to_basic_hash_table_keys(&self, keys: Vec<HashTableKey>) -> Option<Vec<u64>> {
         let mut basic_keys :Vec<u64> = Vec::with_capacity(self.param.l as usize);
         for (i, key) in keys.iter().enumerate() {
             let mut s = "".to_string();
@@ -102,12 +105,12 @@ impl CosineLSH {
                 match hash_val {
                     0 => s.push_str("0"),
                     1 => s.push_str("1"),
-                    _ => panic!("Hash value is not 0 or 1")
+                    _ => return None
                 }
             }
             basic_keys.insert(i, s.parse().unwrap());
         }
-        basic_keys
+        Some(basic_keys)
     }
 }
 
@@ -116,7 +119,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn some_test() {
+    fn euclidian_test() {
         let a = vec![34.0,12.0,65.0,29.0];
         let b = vec![2.0,3.0,4.0];
         assert_eq!(euclidean_dist_square(a.as_slice(), b.as_slice()), 4826.0);
