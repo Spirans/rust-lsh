@@ -38,13 +38,14 @@ impl CosineLshParam {
 }
 
 
-pub struct CosineLSH {
-    tables: Vec<HashTable>,
+pub struct CosineLSH<T> {
+    tables: Vec<HashTable<T>>,
     next_id: u64,
     param: CosineLshParam
 }
 
-impl CosineLSH {
+impl<T> CosineLSH<T>
+    where T: Clone + Copy {
     pub fn new(dim: i64, l: i64, m: i64) -> Self {
         CosineLSH {
             tables: vec![HashTable::new(); l as usize],
@@ -53,7 +54,7 @@ impl CosineLSH {
         }
     }
 
-    pub fn insert(&mut self, point: Vec<f64>, extra_data: u64) {
+    pub fn insert(&mut self, point: Vec<f64>, extra_data: T) {
         if let Some(hvs) = self.to_basic_hash_table_keys(self.param.hash(point.as_slice())) {
             for (a, b) in self.tables.iter_mut().enumerate() {
                 let j = hvs[a];
@@ -66,20 +67,21 @@ impl CosineLSH {
         }
     }
 
-    pub fn query(&self, q: Vec<f64>, max_result: usize) -> Option<Vec<QueryResult>> {
-        let mut seen :HashMap<u64,&Point> = HashMap::new();
+    pub fn query(&self, q: Vec<f64>, max_result: usize) -> Option<Vec<QueryResult<T>>> {
+        let mut seen :HashMap<u64,&Point<T>> = HashMap::new();
         if let Some(hvs) = self.to_basic_hash_table_keys(self.param.hash(&q)) {
-        self.tables.iter().enumerate().for_each(|(i, table)|
-            {
-                if let Some(candidates) = table.get(hvs[i].borrow()) {
-                    candidates.iter().
-                        for_each(|p| { seen.entry(p.id).or_insert(p); });
+            self.tables.iter().enumerate().for_each(|(i, table)|
+                {
+                    if let Some(candidates) = table.get(hvs[i].borrow()) {
+                        candidates.iter().
+                            for_each(|p| { seen.entry(p.id).or_insert(p); });
+                    }
                 }
-            }
-        );}
+            )
+        }
 
 
-        let mut distances :Vec<QueryResult> = Vec::with_capacity(seen.len());
+        let mut distances :Vec<QueryResult<T>> = Vec::with_capacity(seen.len());
         for (_, value) in seen {
             let distance = euclidean_dist_square(&q, &value.vector);
             distances.push(QueryResult{

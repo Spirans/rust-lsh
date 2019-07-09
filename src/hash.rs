@@ -7,24 +7,23 @@ pub struct Signature(pub Vec<u8>);
 pub type HashTableKey = Vec<u8>;
 
 #[derive(Debug,Clone)]
-pub struct Point{
+pub struct Point<T: Sized>{
     pub vector: Vec<f64>,
-    pub extra_data: u64,
+    pub extra_data: T,
     pub id: u64,
 }
-
 
 #[derive(Debug, Clone)]
-pub struct QueryResult<'a> {
+pub struct QueryResult<'a, T> {
     pub distance: f64,
     pub vector: &'a [f64],
-    pub extra_data: u64,
+    pub extra_data: T,
     pub id: u64,
 }
 
-pub type HashTableBucket = Vec<Point>;
+pub type HashTableBucket<T> = Vec<Point<T>>;
 
-pub type HashTable = HashMap<u64, HashTableBucket>;
+pub type HashTable<T> = HashMap<u64, HashTableBucket<T>>;
 
 pub struct Hyperlanes(Vec<Vec<f64>>);
 
