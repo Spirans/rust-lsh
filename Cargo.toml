@@ -3,6 +3,9 @@ name = "cosine-lsh"
 version = "0.1.0"
 authors = ["Veniamin Stepanov <vics31@gmail.com>"]
 edition = "2018"
+repository = "https://github.com/Spirans/rust-lsh"
+license = "MIT"
+description = "Cosine Locality-Sensitive Hashing"
 
 [dependencies]
 rand = "0.6.5"
