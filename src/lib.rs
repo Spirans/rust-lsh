@@ -6,7 +6,7 @@ use std::collections::HashMap;
 fn euclidean_dist_square(p1: &[f64], p2: &[f64]) -> f64 {
     p1.iter().zip(p2).
        fold(0.0, |acc, (i, j)| acc + (j - i).
-       powf(2.0))
+       powi(2))
 }
 
 struct CosineLshParam {
