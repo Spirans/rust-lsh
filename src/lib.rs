@@ -2,7 +2,6 @@ mod hash;
 use hash::{Hash, HashTableKey, Hyperlanes, QueryResult, Point, HashTableBucket, HashTable};
 use core::borrow::Borrow;
 use std::collections::HashMap;
-use std::error::Error;
 
 fn euclidean_dist_square(p1: &[f64], p2: &[f64]) -> f64 {
     p1.iter().zip(p2).
