@@ -43,8 +43,8 @@ impl Signature {
         hs.0.iter().enumerate().for_each(|(hix, h)| {
             match e.iter().enumerate().
                 fold(0.0, |sum, x| sum + h[x.0] * *x.1) {
-                d if d >= 0.0 => sigarr.insert(hix, 1),
-                _ => sigarr.insert(hix, 0),
+                d if d >= 0.0 => sigarr[hix] = 1,
+                _ => sigarr[hix] = 0,
             }
         });
         Signature(sigarr)
@@ -57,8 +57,8 @@ impl Hyperlanes {
         let mut hs = vec![vec![0.0; s as usize]; d as usize];
         (0..d).for_each(|i| {
             let mut v = vec![0.0; s as usize];
-            (0..s).for_each(|i| v.insert(i as usize, rng.gen()));
-            hs.insert(i as usize, v);
+            (0..s).for_each(|i| v[i as usize] = rng.gen());
+            hs[i as usize] = v;
         });
         Hyperlanes(hs)
     }

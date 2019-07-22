@@ -1,6 +1,6 @@
 [package]
 name = "cosine-lsh"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Veniamin Stepanov <vics31@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/Spirans/rust-lsh"

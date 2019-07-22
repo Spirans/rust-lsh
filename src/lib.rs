@@ -1,7 +1,8 @@
 mod hash;
 use hash::{Hash, HashTableKey, Hyperlanes, QueryResult, Point, HashTableBucket, HashTable};
-use core::borrow::{Borrow};
+use core::borrow::Borrow;
 use std::collections::HashMap;
+use std::error::Error;
 
 fn euclidean_dist_square(p1: &[f64], p2: &[f64]) -> f64 {
     p1.iter().zip(p2).
@@ -29,9 +30,9 @@ impl CosineLshParam {
         for i in 0..hvs.capacity() {
             let mut s = Vec::with_capacity(self.m as usize);
             for j in 0..self.m {
-                s.insert(j as usize, simhash.sig.0[i*self.m as usize+j as usize].to_owned());
+                s.push(simhash.sig.0[i*self.m as usize+j as usize]);
             }
-            hvs.insert(i, s);
+            hvs.push(s);
         };
         hvs
     }
@@ -54,7 +55,7 @@ impl<T> CosineLSH<T>
         }
     }
 
-    pub fn insert(&mut self, point: Vec<f64>, extra_data: T) {
+    pub fn insert(&mut self, point: Vec<f64>, extra_data: T) -> Option<()> {
         if let Some(hvs) = self.to_basic_hash_table_keys(self.param.hash(point.as_slice())) {
             for (a, b) in self.tables.iter_mut().enumerate() {
                 let j = hvs[a];
@@ -64,7 +65,10 @@ impl<T> CosineLSH<T>
                     or_insert_with(HashTableBucket::new).
                     push(Point { vector: point.clone(), id: self.next_id, extra_data });
             };
+        } else {
+            return None
         }
+        Some(())
     }
 
     pub fn query(&self, q: Vec<f64>, max_result: usize) -> Option<Vec<QueryResult<T>>> {
@@ -101,7 +105,7 @@ impl<T> CosineLSH<T>
 
     fn to_basic_hash_table_keys(&self, keys: Vec<HashTableKey>) -> Option<Vec<u64>> {
         let mut basic_keys :Vec<u64> = Vec::with_capacity(self.param.l as usize);
-        for (i, key) in keys.iter().enumerate() {
+        for key in keys {
             let mut s = "".to_string();
             for (_, hash_val) in key.iter().enumerate() {
                 match hash_val {
@@ -110,7 +114,7 @@ impl<T> CosineLSH<T>
                     _ => return None
                 }
             }
-            basic_keys.insert(i, s.parse().unwrap());
+            basic_keys.push(s.parse().unwrap());
         }
         Some(basic_keys)
     }
